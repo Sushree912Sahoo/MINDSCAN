@@ -1,6 +1,6 @@
 # MindScan — DASS-21 Anxiety Classification
 
-![Frontend UI](frontend/Frntend.png)
+![Frontend UI](frontend/Frontend_design.png)
 
 **Live App:** https://mindscanweb.vercel.app/ 
 **Backend API:** https://dass21-backend.onrender.com/api/health
