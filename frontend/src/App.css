@@ -577,6 +577,38 @@ body::before {
   border-top: 1px solid var(--border);
   position: relative;
   z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ── GitHub Code Link ────────────────────────────────────────── */
+.code-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 14px;
+  border-radius: 100px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-lt);
+  font-size: 11px;
+  font-weight: 500;
+  text-decoration: none;
+  letter-spacing: 0.05em;
+  transition: var(--transition);
+}
+.code-link:hover {
+  border-color: #a78bfa;
+  color: #a78bfa;
+  background: rgba(167,139,250,0.08);
+}
+.code-link svg {
+  width: 14px;
+  height: 14px;
+  fill: currentColor;
+  flex-shrink: 0;
 }
 
 /* ── Animations ─────────────────────────────────────────────── */
