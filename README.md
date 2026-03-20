@@ -57,7 +57,7 @@ computes three clinical subscale scores per the official DASS-21 manual
 
 Trained in Google Colab with TensorFlow/Keras. Saved with:
 ```python
-model.save("dass_cnn_model_1.keras")
+model.save("dass_model.tflite")
 joblib.dump(scaler, "scaler_1.pkl")
 joblib.dump(le, "label_encoder_1.pkl")
 ```
@@ -123,7 +123,7 @@ scaler_1.pkl
 reshape → (1, 21, 1)                     adds channel dim for CNN
               │
               ▼
-dass_cnn_model_1.keras
+dass_model.tflite
   Conv1D(16) → BatchNorm                 detects basic item patterns
   Conv1D(32) → BatchNorm → MaxPool       deeper patterns, downsampled
   Conv1D(32) → GlobalMaxPool            strongest feature per map
@@ -168,7 +168,7 @@ React renders ResultCard:
 
 | File | Saved as | Place in |
 |---|---|---|
-| CNN model | `dass_cnn_model_1.keras` | `backend/models/` |
+| CNN model | `dass_model.tflite` | `backend/models/` |
 | StandardScaler | `scaler_1.pkl` | `backend/models/` |
 | LabelEncoder | `label_encoder_1.pkl` | `backend/models/` |
 
@@ -178,9 +178,9 @@ dass21-app/
 │   ├── app.py
 │   ├── requirements.txt
 │   └── models/
-│       ├── dass_cnn_model_1.keras   ← model.save("dass_cnn_model_1.keras")
+│       ├── dass_model.tflite        ← model.save("dass_model.tflite")
 │       ├── scaler_1.pkl             ← joblib.dump(scaler, "scaler_1.pkl")
-│       └── label_encoder_1.pkl     ← joblib.dump(le, "label_encoder_1.pkl")
+│       └── label_encoder_1.pkl      ← joblib.dump(le, "label_encoder_1.pkl")
 ├── frontend/
 │   ├── src/
 │   │   ├── App.jsx
