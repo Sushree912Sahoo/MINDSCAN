@@ -1,5 +1,8 @@
 # MindScan — DASS-21 Anxiety Classification
 
+**Live App:** https://mindscanweb.vercel.app/ 
+**Backend API:** https://dass21-backend.onrender.com/api/health
+
 A clinical web application that classifies **Anxiety Level** from the DASS-21
 questionnaire using a trained 1D-CNN. Built with React + Flask, deployed on
 Vercel (frontend) and Render (backend).
