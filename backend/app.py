@@ -2,7 +2,12 @@ import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
-
+import tensorflow as tf
+tf.config.set_visible_devices([], 'GPU')
+gpus = tf.config.list_physical_devices('GPU')
+if gpus:
+    for gpu in gpus:
+        tf.config.experimental.set_memory_growth(gpu, True)
 from flask import Flask, request, jsonify
 import numpy as np
 import tensorflow as tf
