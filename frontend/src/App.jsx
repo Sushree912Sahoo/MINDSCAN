@@ -5,10 +5,10 @@ import Header from "./components/Header";
 import "./App.css";
 
 export default function App() {
-  const [result, setResult] = useState(null);
+  const [result, setResult]   = useState(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [step, setStep] = useState("form");
+  const [error, setError]     = useState(null);
+  const [step, setStep]       = useState("form");
 
   const handleSubmit = async (answers) => {
     setLoading(true);
@@ -54,7 +54,14 @@ export default function App() {
       </main>
       <footer className="footer">
         <p>This tool is for informational purposes only. Not a clinical diagnosis.</p>
-        <a className="code-link" href="https://github.com/Sushree912Sahoo/MINDSCAN" target="_blank" rel="noopener noreferrer">View Source Code</a>
+        <a
+          className="code-link"
+          href="https://github.com/Sushree912Sahoo/MINDSCAN"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          View Source Code
+        </a>
       </footer>
     </div>
   );
