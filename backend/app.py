@@ -1,12 +1,15 @@
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
+os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+
 from flask import Flask, request, jsonify
 import numpy as np
 import tensorflow as tf
-import os
 import joblib
 
 app = Flask(__name__)
 
-# ── CORS - Manual headers (most reliable approach) ───────────────────────────
 @app.after_request
 def after_request(response):
     response.headers.add('Access-Control-Allow-Origin', '*')
@@ -14,14 +17,12 @@ def after_request(response):
     response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
     return response
 
-# ── Load your 3 trained files once at startup ──────────────────────────────
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 scaler        = joblib.load(os.path.join(BASE_DIR, 'models/scaler_1.pkl'))
 label_encoder = joblib.load(os.path.join(BASE_DIR, 'models/label_encoder_1.pkl'))
 model         = tf.keras.models.load_model(os.path.join(BASE_DIR, 'models/dass_cnn_model_1.keras'))
 
-# ── Anxiety level mapping (1-5 numeric → text) ─────────────────────────────
 ANXIETY_LABELS = {
     1: "Normal",
     2: "Mild",
@@ -29,31 +30,6 @@ ANXIETY_LABELS = {
     4: "Severe",
     5: "Extremely Severe"
 }
-
-# ── DASS-21 question metadata ───────────────────────────────────────────────
-QUESTIONS = [
-    (1,  "I found it hard to wind down",                                        "S"),
-    (2,  "I was aware of dryness of my mouth",                                  "A"),
-    (3,  "I couldn't seem to experience any positive feeling",                  "D"),
-    (4,  "I experienced breathing difficulty",                                  "A"),
-    (5,  "I found it difficult to work up the initiative to do things",         "D"),
-    (6,  "I tended to over-react to situations",                                "S"),
-    (7,  "I experienced trembling (e.g. in the hands)",                         "A"),
-    (8,  "I felt that I was using a lot of nervous energy",                     "S"),
-    (9,  "I was worried about situations in which I might panic",               "A"),
-    (10, "I felt that I had nothing to look forward to",                        "D"),
-    (11, "I found myself getting agitated",                                     "S"),
-    (12, "I found it difficult to relax",                                       "S"),
-    (13, "I felt down-hearted and blue",                                        "D"),
-    (14, "I was intolerant of anything that kept me from getting on",           "S"),
-    (15, "I felt I was close to panic",                                         "A"),
-    (16, "I was unable to become enthusiastic about anything",                  "D"),
-    (17, "I felt I wasn't worth much as a person",                              "D"),
-    (18, "I felt that I was rather touchy",                                     "S"),
-    (19, "I was aware of the action of my heart in the absence of physical exertion", "A"),
-    (20, "I felt scared without any good reason",                               "A"),
-    (21, "I felt that life was meaningless",                                    "D"),
-]
 
 def severity_label(score, subscale):
     thresholds = {
@@ -70,7 +46,6 @@ def severity_label(score, subscale):
 def predict():
     if request.method == 'OPTIONS':
         return jsonify({}), 200
-
     try:
         data = request.get_json()
         answers = data.get('answers', [])
