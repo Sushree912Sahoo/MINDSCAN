@@ -1,5 +1,4 @@
 from flask import Flask, request, jsonify
-from flask_cors import CORS
 import numpy as np
 import tensorflow as tf
 import os
@@ -7,14 +6,13 @@ import joblib
 
 app = Flask(__name__)
 
-# ── CORS - Allow local dev + all Vercel deployments ─────────────────────────
-CORS(app, origins=[
-    "http://localhost:5173",
-    "http://localhost:3000",
-    "https://mindscan-z42i.vercel.app",
-    "https://mindscan-two.vercel.app",
-    "https://mindscan-1mgh.vercel.app",
-])
+# ── CORS - Manual headers (most reliable approach) ───────────────────────────
+@app.after_request
+def after_request(response):
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+    return response
 
 # ── Load your 3 trained files once at startup ──────────────────────────────
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -58,7 +56,6 @@ QUESTIONS = [
 ]
 
 def severity_label(score, subscale):
-    """Return severity string based on DASS-21 clinical thresholds."""
     thresholds = {
         "D": [(0,9,"Normal"),(10,13,"Mild"),(14,20,"Moderate"),(21,27,"Severe"),(28,42,"Extremely Severe")],
         "A": [(0,7,"Normal"),(8,9,"Mild"),(10,14,"Moderate"),(15,19,"Severe"),(20,42,"Extremely Severe")],
@@ -69,8 +66,11 @@ def severity_label(score, subscale):
             return label
     return "Unknown"
 
-@app.route('/api/predict', methods=['POST'])
+@app.route('/api/predict', methods=['POST', 'OPTIONS'])
 def predict():
+    if request.method == 'OPTIONS':
+        return jsonify({}), 200
+
     try:
         data = request.get_json()
         answers = data.get('answers', [])
@@ -82,27 +82,23 @@ def predict():
             if a not in [0, 1, 2, 3]:
                 return jsonify({'error': f'Answer {i+1} must be 0-3'}), 400
 
-        # ── Preprocess ───────────────────────────────────────────────────
-        answers = [int(a) for a in answers]
+        answers  = [int(a) for a in answers]
         X        = np.array(answers, dtype=float).reshape(1, -1)
         X_scaled = scaler.transform(X)
         X_cnn    = X_scaled.reshape(1, 21, 1)
 
-        # ── Predict ──────────────────────────────────────────────────────
-        probs     = model.predict(X_cnn, verbose=0)[0]
-        pred_idx  = int(np.argmax(probs))
-        pred_num  = int(label_encoder.inverse_transform([pred_idx])[0])
+        probs      = model.predict(X_cnn, verbose=0)[0]
+        pred_idx   = int(np.argmax(probs))
+        pred_num   = int(label_encoder.inverse_transform([pred_idx])[0])
         pred_label = ANXIETY_LABELS.get(pred_num, str(pred_num))
         confidence = float(np.max(probs))
 
-        # ── All class probabilities ───────────────────────────────────────
         all_probs = {}
         for i, p in enumerate(probs):
-            num = int(label_encoder.inverse_transform([i])[0])
+            num   = int(label_encoder.inverse_transform([i])[0])
             label = ANXIETY_LABELS.get(num, str(num))
             all_probs[label] = round(float(p) * 100, 1)
 
-        # ── DASS-21 subscale scoring ──────────────────────────────────────
         d_items = [3, 5, 10, 13, 16, 17, 21]
         a_items = [2, 4, 7, 9, 15, 19, 20]
         s_items = [1, 6, 8, 11, 12, 14, 18]
