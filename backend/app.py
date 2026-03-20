@@ -5,7 +5,7 @@ os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 from flask import Flask, request, jsonify
 import numpy as np
 import joblib
-import tflite_runtime.interpreter as tflite
+import tensorflow as tf
 
 app = Flask(__name__)
 
@@ -21,8 +21,8 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 scaler        = joblib.load(os.path.join(BASE_DIR, 'models/scaler_1.pkl'))
 label_encoder = joblib.load(os.path.join(BASE_DIR, 'models/label_encoder_1.pkl'))
 
-# Load TFLite model
-interpreter = tflite.Interpreter(
+# Use TFLite interpreter from tensorflow (no separate tflite-runtime needed)
+interpreter = tf.lite.Interpreter(
     model_path=os.path.join(BASE_DIR, 'models/dass_model.tflite')
 )
 interpreter.allocate_tensors()
@@ -68,7 +68,6 @@ def predict():
         X_scaled = scaler.transform(X)
         X_cnn    = X_scaled.reshape(1, 21, 1).astype(np.float32)
 
-        # TFLite inference
         interpreter.set_tensor(input_details[0]['index'], X_cnn)
         interpreter.invoke()
         probs = interpreter.get_tensor(output_details[0]['index'])[0]
