@@ -11,7 +11,9 @@ app = Flask(__name__)
 CORS(app, origins=[
     "http://localhost:5173",
     "http://localhost:3000",
-    "https://*.vercel.app"
+    "https://mindscan-z42i.vercel.app",
+    "https://mindscan-two.vercel.app",
+    "https://mindscan-1mgh.vercel.app",
 ])
 
 # ── Load your 3 trained files once at startup ──────────────────────────────
