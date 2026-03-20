@@ -1,17 +1,11 @@
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
-import tensorflow as tf
-tf.config.set_visible_devices([], 'GPU')
-gpus = tf.config.list_physical_devices('GPU')
-if gpus:
-    for gpu in gpus:
-        tf.config.experimental.set_memory_growth(gpu, True)
+
 from flask import Flask, request, jsonify
 import numpy as np
-import tensorflow as tf
 import joblib
+import tflite_runtime.interpreter as tflite
 
 app = Flask(__name__)
 
@@ -26,7 +20,14 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 scaler        = joblib.load(os.path.join(BASE_DIR, 'models/scaler_1.pkl'))
 label_encoder = joblib.load(os.path.join(BASE_DIR, 'models/label_encoder_1.pkl'))
-model         = tf.keras.models.load_model(os.path.join(BASE_DIR, 'models/dass_cnn_model_1.keras'))
+
+# Load TFLite model
+interpreter = tflite.Interpreter(
+    model_path=os.path.join(BASE_DIR, 'models/dass_model.tflite')
+)
+interpreter.allocate_tensors()
+input_details  = interpreter.get_input_details()
+output_details = interpreter.get_output_details()
 
 ANXIETY_LABELS = {
     1: "Normal",
@@ -52,7 +53,7 @@ def predict():
     if request.method == 'OPTIONS':
         return jsonify({}), 200
     try:
-        data = request.get_json()
+        data    = request.get_json()
         answers = data.get('answers', [])
 
         if len(answers) != 21:
@@ -65,9 +66,13 @@ def predict():
         answers  = [int(a) for a in answers]
         X        = np.array(answers, dtype=float).reshape(1, -1)
         X_scaled = scaler.transform(X)
-        X_cnn    = X_scaled.reshape(1, 21, 1)
+        X_cnn    = X_scaled.reshape(1, 21, 1).astype(np.float32)
 
-        probs      = model.predict(X_cnn, verbose=0)[0]
+        # TFLite inference
+        interpreter.set_tensor(input_details[0]['index'], X_cnn)
+        interpreter.invoke()
+        probs = interpreter.get_tensor(output_details[0]['index'])[0]
+
         pred_idx   = int(np.argmax(probs))
         pred_num   = int(label_encoder.inverse_transform([pred_idx])[0])
         pred_label = ANXIETY_LABELS.get(pred_num, str(pred_num))
